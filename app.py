@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pickle
+import joblib  # Changed from pickle to joblib
 import os
 import shap
 import plotly.express as px
@@ -40,7 +40,7 @@ def load_artifacts():
     
     def load_pkl(name):
         with open(os.path.join(m_dir, name), 'rb') as f:
-            return pickle.load(f)
+            return joblib.load(f)  # Using joblib here
 
     model = load_pkl('model.pkl')
     residual_std = load_pkl('residual_std.pkl')
@@ -51,11 +51,9 @@ def load_artifacts():
     FEATURES = load_pkl('feature_columns.pkl')
     df = load_pkl('df.pkl')
     
-    # SHAP objects are notoriously version-dependent. Try loading, else rebuild.
-    try:
-        shap_explainer = load_pkl('shap_explainer.pkl')
-    except Exception:
-        shap_explainer = shap.TreeExplainer(model)
+    # We completely removed shap_explainer.pkl loading. 
+    # Rebuilding it on startup is 100% reliable across different Python/sklearn versions.
+    shap_explainer = shap.TreeExplainer(model)
         
     return model, residual_std, area_stats, comp_scaler, comp_index, comp_features, FEATURES, df, shap_explainer
 
