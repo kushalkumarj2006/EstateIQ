@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib  # Changed from pickle to joblib
+import joblib
 import os
 import shap
 import plotly.express as px
@@ -40,7 +40,7 @@ def load_artifacts():
     
     def load_pkl(name):
         with open(os.path.join(m_dir, name), 'rb') as f:
-            return joblib.load(f)  # Using joblib here
+            return joblib.load(f)
 
     model = load_pkl('model.pkl')
     residual_std = load_pkl('residual_std.pkl')
@@ -51,8 +51,7 @@ def load_artifacts():
     FEATURES = load_pkl('feature_columns.pkl')
     df = load_pkl('df.pkl')
     
-    # We completely removed shap_explainer.pkl loading. 
-    # Rebuilding it on startup is 100% reliable across different Python/sklearn versions.
+    # Rebuild SHAP explainer to avoid cross-version pickle errors
     shap_explainer = shap.TreeExplainer(model)
         
     return model, residual_std, area_stats, comp_scaler, comp_index, comp_features, FEATURES, df, shap_explainer
@@ -257,8 +256,13 @@ if submitted:
         ic6.metric("5-Year Value", f"${inv['five_yr_value']:,}")
         
         st.subheader("Risk Flags")
+        
+        # FIX IS HERE: Replaced the one-liner ternary operator with a standard if/else block
         for flag in d['risk_flags']:
-            st.success(flag) if "No major" in flag else st.warning(flag)
+            if "No major" in flag:
+                st.success(flag)
+            else:
+                st.warning(flag)
                 
     with col_right:
         st.subheader("Comparable Properties")
